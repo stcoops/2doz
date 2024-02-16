@@ -42,7 +42,7 @@ def create_file_menu():
     
 def settings_menu():
     choice = input("Settings: (1): Task Settings, (2): More Settings, (0): Reload settings")
-    
+
 
 
 
@@ -133,9 +133,22 @@ def Main():
         elif choice == "4":
             quit()
 
+def load():
+    settings_file = ("additional/settings.json") #Settings file should not be moved
+                                                 #Should implement Defaults if it is moved.
+    to_do_file = ("lists/2DoList.csv") #Fetch this from settings
+    load_settings(settings_file)
+
+def load_settings():
+    try:
+        with open("settings.json","r") as settings_file:
+            settings = settings_file #Have to unpack this into variables to be placed within the class
+    except:
+        print("Error Code X069: Settings file not found")
+
 if __name__ ==  "__main__":
     print("Welcome to 2doz Version Alpha. Development still very much in progress x")
-    choice = input("Select (1) for first-time setup, or hit Enter to skip.")
+    choice = input("Select (1) for first-time setup,(2) to Hide this message, or hit Enter to skip.")
     if choice == "1":
         try:
             setup()
