@@ -1,2 +1,3 @@
 task,priority,location,notes
-Coding,10,Home,None
+IMPORTANT,1000000000000000,Bed,"Split up 2doz into Display functions, Backend data functions and same for settings split into two."
+IMPORTANT pt 2,1,bed,"Display functions are essentially just a function for each individual menu. all are built ROUND THE BASIC  structure of having 1 choice variable, aka onne quesrion . they also must have no  calcilarion s within themm. these should be saced for the #nackemd# functions which will deal with any interactions with the csv files. the same should follow for settings, if not mroe so becuase there should ne more options in each menu , to make it easily customizable without having to dig through [ages and pages of shit."
