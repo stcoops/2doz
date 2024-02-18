@@ -1,6 +1,9 @@
 #
 notes.txt
 .vscode
+old.py
+test.py
+# .gitignore      #90% sure uncommenting this would make the world explode
 
 
 # Byte-compiled / optimized / DLL files
