@@ -76,6 +76,9 @@ def create_task(file_dir):
         writer = csv.DictWriter(file,header_names) #Header names should already be on the csv file
         writer.writerow(data)
         
+def edit_task(file_dir, field):
+    with open(file_dir)
+
 
 
 def setup():
