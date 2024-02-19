@@ -21,24 +21,20 @@ class app():
         
 
     def fetch_all(self): #Error codes begin with F,look like FXXX
-        with open(self.file_location, "r", newline='') as file:
-            return list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
+        try:
+            with open(self.file_location, "r", newline='') as file:
+                return list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
+        except Exception: #add an option to create one
+            self.file_location = input(error(self.error_log, error_output, "F019", "CSV File not found. Please enter path to file."))
+
+
 
     def load(self):
-        f = self.fetch_settings()
-        self.settings_title_index = f[0]
-        self.settings_priority_index = f[2]
-        self.file_location = f[1] #In future this should be fetched from settings.json x
+        self.file_location = "2DoList.csv" #In future this should be fetched from settings.json x
         self.file_cache = self.fetch_all() #saves the data from the file into our cache
         self.task_count = len(self.file_cache) - 1
         self.headers = self.file_cache[0]
         self.error_log=[]
-
-    def fetch_settings(self):
-        title_index = 0
-        priority_index = 1
-        file_location = "2DoList.csv"
-        return title_index, file_location, priority_index
 
 
 
@@ -55,7 +51,7 @@ class app():
             if index == 0:
                 index = 1
                 continue
-            title_index = row[self.get_attribute_index("title")]  # weird f string behaviour
+            title_index = row[self.get_attribute_index("Title")]  # weird f string behaviour
             print(f"({index}): {title_index}") #had to assign title_index due to a potential bug in f strings
             #NOTE: see f_strings_bug.py for more information. cba to find a proper fix lmao
             index += 1
@@ -95,7 +91,6 @@ class app():
         task_data = self.file_cache[choice]
         for index, attribute in enumerate(task_data):
             print(f"{self.file_cache[0][index]}: {attribute}", end=",\n")
-        #print(f"Title: {task_data[self.settings_title_index]}, priority: {task_data[self.settings_priority_index]}, etc..")
         print("\n")
         self.__selected_task_index = choice #important to track this could cause issues
         self.task_menu()
@@ -108,7 +103,7 @@ class app():
 
     def mark_as_complete(self):
         # should be standardized to fetch from settings etc.                  THIS BIT 
-        self.file_cache[self.__selected_task_index][self.get_attribute_index("complete") ] = True
+        self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete") ] = True
         self.update_file()
         return
     
