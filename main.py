@@ -121,9 +121,14 @@ class app():
         error(self.error_log, None, "K302", "Attribute is not in file header") #SOlution to change headers in settings
     
     def edit_task(self):
+        print("Enter details to change, no input will keep previous details.")
         task_row = []
-        for attribute in self.headers:
-            task_row.append(input(f"{attribute}: "))
+        for index, attribute in enumerate(self.headers):
+            change = input(f"{attribute}: ")
+            if change != "":
+                task_row.append(change)
+            else:
+                task_row.append(self.file_cache[self.__selected_task_index][index])
         self.file_cache[self.__selected_task_index] = (task_row)
         self.update_file()
         return
