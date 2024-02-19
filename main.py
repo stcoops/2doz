@@ -98,12 +98,19 @@ class app():
         
 
     def task_menu(self):
-        prompt = "Do you want to (1): Mark as complete, (2): Edit details, (3): Delete task or (4): Return to main menu"
-        menu(prompt, ["1","2","3","4"], self.mark_as_complete, self.edit_task, self.delete_task, self.return_)
+        complete_prefix = ""
+        if (self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete")]) == "True": #see NOTE in toggle_complete
+            complete_prefix = "in"
+        prompt = f"Do you want to (1): Mark as {complete_prefix}complete, (2): Edit details, (3): Delete task or (4): Return to main menu"
+        menu(prompt, ["1","2","3","4"], self.toggle_complete, self.edit_task, self.delete_task, self.return_)
+        return
 
-    def mark_as_complete(self):
+    def toggle_complete(self):
         # should be standardized to fetch from settings etc.                  THIS BIT 
-        self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete") ] = True
+        if self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete")] == "True": 
+            self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete")] = "False"
+        else: #NOTE Would be much better to use boolean or binary for this than string, but will be implemented along with settings
+            self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete")] = "True"
         self.update_file()
         return
     
