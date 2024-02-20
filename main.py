@@ -5,11 +5,13 @@
 
 import csv
 import datetime
+import json
 
 class app():
     def __init__(self):
         print("Welcome to 2doz Alpha-V1.1.3 'Half-Pint'. Development still very much in progress x")
         input("Press Enter to start.")
+        self.load_settings()
         print("loading Files...")
         try:
             self.load() #This will soon actually load a file lol
@@ -27,10 +29,16 @@ class app():
         except Exception: #add an option to create one
             self.file_location = input(error(self.error_log, error_output, "F019", "CSV File not found. Please enter path to file."))
 
+    def load_settings(self):
+        settings_path = "settings.json"
+        settings = json.load(open(settings_path, "r", encoding = "UTF-8"))
+        self.file_location = settings.get("path-to-list")
+        print(settings)
+
 
 
     def load(self):
-        self.file_location = "2DoList.csv" #In future this should be fetched from settings.json x
+#        self.file_location = "2DoList.csv" #In future this should be fetched from settings.json x
         self.file_cache = self.fetch_all() #saves the data from the file into our cache
         self.task_count = len(self.file_cache) - 1
         self.headers = self.file_cache[0]
