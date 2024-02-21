@@ -3,54 +3,128 @@
 #This source code is licensed under the BSD-style license found in the
 #LICENSE file in the root directory of this source tree. 
 
+#Imports
+import json
 import csv
 import datetime
-import json
+import os
+from pathlib import Path
 
 class app():
+
+###############################################
+#NOTE           LOADING/STARTUP           NOTE#
+###############################################
+
     def __init__(self):
+        self.file_cache = []
+        #Initial Startup
         print("Welcome to 2doz Alpha-V1.1.3 'Half-Pint'. Development still very much in progress x")
         input("Press Enter to start.")
-        self.load_settings()
-        print("loading Files...")
+        os.chdir(Path.home())
         try:
-            self.load() #This will soon actually load a file lol
-            print("Files loaded!")
+            os.chdir("2doz")
+            
+        except FileNotFoundError:
+            print("2doz Folder not found, launching first time setup...")
+            self.first_time_setup()
+
         except Exception as error_output:
-            error(self.error_log, error_output, "X000", "Error Loading files")
-            print("Continuing to 2doz...")
-
+            error(error_log, error_output, "I020", "Could not change directory.")
         
+        self.file_cache = []
 
-    def fetch_all(self): #Error codes begin with F,look like FXXX
-        try:
-            with open(self.file_location, "r", newline='') as file:
-                return list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
-        except Exception: #add an option to create one
-            self.file_location = input(error(self.error_log, error_output, "F019", "CSV File not found. Please enter path to file."))
+        print("loading settings...")
+        self.load_settings()
 
-    def load_settings(self):
-        settings_path = "settings.json"
-        settings = json.load(open(settings_path, "r", encoding = "UTF-8"))
-        self.file_location = settings.get("path-to-list")
-        print(settings)
-
-
-
-    def load(self):
-#        self.file_location = "2DoList.csv" #In future this should be fetched from settings.json x
-        self.file_cache = self.fetch_all() #saves the data from the file into our cache
+        print("loading Files...")
+        print(self.file_location)
+        self.load_to_do() #saves the data from the file into our cache
+        print("file loaded")
         self.task_count = len(self.file_cache) - 1
         self.headers = self.file_cache[0]
-        self.error_log=[]
+        print("init complete.")
+            
+
+   
+        
+
+    def load_to_do(self): #Error codes begin with F,look like FXXX
+        try:
+            with open(self.file_location, "r", newline='') as file:
+                self.file_cache = list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
+        except Exception: #add an option to create one
+            self.file_location = input(error(error_log, error_output, "F019", "CSV File not found. Please enter path to file."))
+
+
+
+
+    def load_settings(self):
+        #handles loading the settings.json file, fairly elegantly compared to previous versions
+        #More detailed description to follow?
+        #
+        try:
+            with open("settings.json", "r", encoding = "UTF-8") as settings_file:
+                self.settings = json.load(settings_file) #######
+            
+        except FileNotFoundError:
+            error(error_log, "FileNotFoundError", "S808", "Settings file not found")
+            return
+
+
+        #NOTE Unsure whether to create a settings file, load defaults or make user specify one, maybe a menu() with all options is necessary with defaults as a default option?
+        #Loading these as and when throuhout the program to reduce RAM usage. This could be optimised by loading all settings on startup.
+    
+        print("settings load complete")
+        self.file_location = str(self.settings.get("lists")[0])
+        print(self.file_location)
+        return
+
+
+
+    def first_time_setup(self):
+        #Creates all files required, and fills them with default values that cause no problems 
+        #Detailed description to follow
+
+        #create a directory to host to do lists and settings
+        try:
+            os.mkdir("2doz")
+        except FileExistsError:
+            print("2doz directory already exists")
+
+        os.chdir("2doz")
+        #Create both files
+        
+
+        with open("settings.json", "x") as settings_file:
+            print(f"settings.json created in {os.getcwd()}")
+
+        list_name = str(input("Enter To-Do list name or hit (Enter) for default:\n"))
+        if list_name == "":
+            list_name = "to-do"
+        self.create_file(list_name)
+
+        with open("settings.json", "w", encoding = "UTF-8") as settings_file:
+            json.dump(settings_defaults_dict, settings_file)
+
+        self.load_settings()
+
+        #with open     
+        
+
+###############################################
+#NOTE            MAIN MENUS               NOTE#
+###############################################
 
 
 
     def main_menu(self):
         while True:
             print("Main Menu")
-            prompt = "Select (1): View tasks, (2): Create Task, (3): Settings, or (4): Quit\n"
+            prompt = "(1): View tasks, (2): Create Task, (3): Settings, or (4): Quit:\n"
             menu(prompt, ["1","2","3","4"], self.view_tasks, self.create_task, self.settings_menu, quit)
+
+
 
     def view_tasks(self):
         print("Tasks:")
@@ -66,6 +140,8 @@ class app():
         self.select_task()
         return
 
+
+
     def create_task(self):
         task_row = []
         for attribute in self.headers:
@@ -73,15 +149,20 @@ class app():
         self.file_cache.append(task_row)
         self.update_file()
 
+
+
     def settings_menu(self):
         print("placeholder")
+
+
 
     def quit(self):
         quit()
 
 
+
     def select_task(self):
-        prompt = "Enter a task number to view it, or hit enter to return to the main menu: "
+        prompt = "Enter a task number to view it, or hit enter to return to the main menu:\n "
         choice = input(prompt)
         print("\n")
         #Input sanitizing
@@ -90,10 +171,10 @@ class app():
         try:
             choice = int(choice)
         except Exception as error_output:
-            error(self.error_log, error_output, "T009", "Input not of type Integer, returning to main menu.")
+            error(error_log, error_output, "T009", "Input not of type Integer, returning to main menu.")
             return
         if choice  < 1 or choice > len(self.file_cache)-1: # -1 for header row x
-            error(self.error_log, "None", "T013", f"Task number ({choice}) does not exist.")
+            error(error_log, "None", "T013", f"Task number ({choice}) does not exist.")
             return
         #print task details.
         task_data = self.file_cache[choice]
@@ -105,13 +186,16 @@ class app():
         return
         
 
+
     def task_menu(self):
         complete_prefix = ""
         if (self.file_cache[self.__selected_task_index][self.get_attribute_index("Complete")]) == "True": #see NOTE in toggle_complete
             complete_prefix = "in"
-        prompt = f"Do you want to (1): Mark as {complete_prefix}complete, (2): Edit details, (3): Delete task or (4): Return to main menu"
+        prompt = f"(1): Mark as {complete_prefix}complete, (2): Edit details, (3): Delete task or (4): Return to main menu:\n"
         menu(prompt, ["1","2","3","4"], self.toggle_complete, self.edit_task, self.delete_task, self.return_)
         return
+
+
 
     def toggle_complete(self):
         # should be standardized to fetch from settings etc.                  THIS BIT 
@@ -122,12 +206,16 @@ class app():
         self.update_file()
         return
     
+
+
     def get_attribute_index(self, attribute):
         for index, header in enumerate(self.headers):
             if header == attribute:
                 return index
-        error(self.error_log, None, "K302", "Attribute is not in file header") #SOlution to change headers in settings
+        error(error_log, None, "K302", "Attribute is not in file header") #SOlution to change headers in settings
     
+
+
     def edit_task(self):
         print("Enter details to change, no input will keep previous details.")
         task_row = []
@@ -141,21 +229,40 @@ class app():
         self.update_file()
         return
 
+
+
     def delete_task(self):
         self.file_cache.pop(self.__selected_task_index)
         self.update_file()
         return
 
+
+
     def return_(self):
         return
+
 ###############################################
 #NOTE          CSV INTERACTIONS           NOTE#
 ###############################################
 
 
     def fetch_all(self): #Error codes begin with F,look like FXXX
-        with open(self.file_location, "r", newline='') as file:
-            return list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
+        try:
+            with open(self.file_location, "r", newline='') as file:
+                try:
+                    return list(csv.reader(file)) #returns array of the entire csv details to be abstracted for the user
+                except Exception as error_output:
+                    error(error_log, error_output, "F097", "CSV File exists but could not be read")
+        
+        except FileNotFoundError as error_output: #change exception to if File not found then use a menu and create_file to rectify
+            error(error_log, error_output, "F902", " CSV File not found")
+            #for dev purposes only
+            for log in error_log:
+                print(log)
+            #end of dev purposes
+            prompt = "(1)(default): Create file in current working directory, (2): Create file in Specified directory, (3): Specify new path to file.\n"
+            menu(prompt, [1,2,3],self.create_file, self.dev_placeholder, self.dev_placeholder, default=self.create_file)
+
 
     def update_file(self):
         try: #Bulletproof?
@@ -163,11 +270,34 @@ class app():
                 writer = csv.writer(file)
                 for row in self.file_cache:
                     writer.writerow((row))
-            self.load()
+            
+            self.load_to_do()
             return
+        
         except Exception as error_output:
-            error(self.error_log, error_output, "U107", "Could not update file.")
+            error(error_log, error_output, "U107", "Could not update file.")
             return
+
+
+    def create_file(self,list_name):
+        with open(f"{list_name}.csv", "x") as list_file:
+            print(f"{list_name}.csv created in {os.getcwd()}")
+                    
+        self.file_location = os.sep.join([os.getcwd(), f"{list_name}.csv"]) #change current to do list path to this
+        settings_defaults_dict.get("lists").append(self.file_location)
+        self.file_cache.append(settings_defaults_dict.get("headers"))
+        self.update_file()
+        return
+
+    def dev_placeholder(self):
+        print("placeholder\n")
+        return
+    
+
+
+###############################################
+#NOTE        NON-CLASS FUNCTIONS          NOTE#
+###############################################
 
 
 
@@ -193,8 +323,22 @@ def menu(prompt, options, *functions, **kwargs): #menu is a boilerplate for each
 def error(error_log, raw_output, code, message):
     error_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     error_log.append(f"at {error_time}, {code}: {message}; {raw_output}")
-    print(f"Error Code {code}: {message}")
+    print(f"Error Code {code}: {message}\n")
     return
+
+
+#GLOBAL variables are bad right?
+
+global settings_defaults_dict #this doesnt need to be global
+settings_defaults_dict = {
+    'lists': [],
+    'headers': ["Title","Priority","Complete","Date","Time","Location","Notes"]
+    }
+
+
+global error_log #this might need to be global
+error_log = []
+
     
 
 if __name__ ==  "__main__":
@@ -206,10 +350,11 @@ if __name__ ==  "__main__":
         print("Exiting 2doz due to KB interrupt, Goodbye")
         quit()
     except Exception as error_output:
-        error(instance.error_log, error_output, "Z042", "Catastrophic Failure")
-        choice = input("Catastrophic Failure, select (1) to view Error Logs or hit Enter to Exit 2doz.")
+        error(error_log, error_output, "Z042", "Catastrophic Failure")
+        #x = 1 / 0
+        choice = input("Catastrophic Failure, select (1) to view Error Logs first or hit Enter to quit.")
         if choice == "1":
-            for log in instance.error_log:
+            for log in error_log:
                 print(log)
         else:
             quit()
